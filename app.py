@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 from sklearn.preprocessing import StandardScaler
 from azure.storage.blob import BlobServiceClient
 
-# Initialiser Flask
+# Initialiser  Flask
 app = Flask(__name__)
 
 # Connexion au stockage Azure
