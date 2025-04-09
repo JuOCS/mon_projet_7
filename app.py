@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 from sklearn.preprocessing import StandardScaler
 from azure.storage.blob import BlobServiceClient
 
-# Initialiser  Flask
+# Initialiser Flask
 app = Flask(__name__)
 
 # Connexion au stockage Azure
@@ -18,6 +18,9 @@ def download_blob(blob_name, save_path):
     blob_client = blob_service.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
     with open(save_path, "wb") as f:
         f.write(blob_client.download_blob().readall())
+
+# S'assurer que le dossier 'data' existe
+os.makedirs("data", exist_ok=True)
 
 # Télécharger les fichiers depuis Azure Blob Storage
 download_blob("modele_pipeline.pkl", "modele_pipeline.pkl")
@@ -32,6 +35,15 @@ pipeline = joblib.load("modele_pipeline.pkl")
 scaler = pipeline.named_steps['scaler']
 model = pipeline.named_steps['classifier']
 
+# Initialiser SHAP explainer une seule fois
+explainer = shap.TreeExplainer(model)
+
+# Route par défaut pour test
+@app.route('/')
+def home():
+    return jsonify({'message': "Bienvenue sur l'API mon_projet_7"})
+
+# Route de prédiction
 @app.route("/predict", methods=['POST'])
 def predict():
     try:
@@ -48,8 +60,6 @@ def predict():
         prediction = model.predict_proba(sample_scaled)
         proba = prediction[0][1] * 100
 
-        # SHAP values
-        explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(sample_scaled)[0][0].tolist()
 
         return jsonify({
@@ -61,6 +71,11 @@ def predict():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Lancer l'API
+if __name__ == "__main__":
+    app.run(debug=False, host="0.0.0.0", port=5000)
+
 
 # Lancer l'API
 if __name__ == "__main__":
