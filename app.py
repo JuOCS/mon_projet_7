@@ -11,6 +11,8 @@ app = Flask(__name__)
 
 # Connexion au stockage Azure
 BLOB_CONN_STR = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+if not BLOB_CONN_STR:
+    raise ValueError("La chaîne de connexion Azure Blob n'est pas définie.")
 CONTAINER_NAME = "my-container"
 
 def download_blob(blob_name, save_path):
